@@ -10,7 +10,7 @@ Scroll through your spend, tokens, tool calls, longest sessions, and a wall of s
 
 **▶ Live demo:** https://jjlien06.github.io/claude-wrapped/ *(sample data)*
 
-> Claude Code stores **no dollar figures** in its logs — cost is reconstructed token-by-token from current published per-model rates. Treat it as a close estimate, not a bill.
+> **This is a token-cost estimate, not your bill.** Claude Code stores no dollar figures, so cost is reconstructed token-by-token from published per-model API rates. **If you're on a Pro or Max subscription** (or any flat-rate plan), you did **not** pay this — it's what the same usage *would* cost at pay-as-you-go API prices. Think of it as "what my usage was worth," not "what I was charged."
 
 ## Wrap your own year
 

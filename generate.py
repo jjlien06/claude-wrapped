@@ -266,6 +266,8 @@ def report(d):
     print(f"  Peak hour        {d['peakHourLabel']}   Active {d['activeDays']}/{d['days']} days")
     print("  Spend by model:  " + " · ".join(f"{k} ${v:,}" for k, v in d["models"]))
     print("═" * 52)
+    print("  Note: token-cost estimate at API rates. On a Pro/Max plan you")
+    print("  didn't pay this — it's what the usage would cost pay-as-you-go.")
 
 
 def main():
