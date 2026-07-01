@@ -31,7 +31,9 @@ M = 1_000_000
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
-def parse(logs):
+def parse(logs, drange=None):
+    """drange: optional (start_date, end_date) — only count activity within it."""
+    dmin, dmax = drange if drange else (None, None)
     files = glob.glob(os.path.join(logs, "**", "*.jsonl"), recursive=True)
     if not files:
         sys.exit(f"No .jsonl logs found under {logs}")
@@ -56,9 +58,13 @@ def parse(logs):
             if ts:
                 try:
                     dt = datetime.datetime.fromisoformat(ts.replace("Z", "+00:00"))
-                    byhour[dt.hour] += 1; active.add(dt.date().isoformat())
                 except Exception:
-                    pass
+                    dt = None
+            if dmin:  # date filter active — drop anything outside the window (incl. undated lines)
+                if dt is None or not (dmin <= dt.date() <= dmax):
+                    continue
+            if dt:
+                byhour[dt.hour] += 1; active.add(dt.date().isoformat())
             m = d.get("message")
             if not isinstance(m, dict):
                 continue
@@ -265,6 +271,9 @@ def report(d):
 def main():
     ap = argparse.ArgumentParser(description="Claude Code usage → Wrapped")
     ap.add_argument("--logs", default=os.path.expanduser("~/.claude/projects"))
+    ap.add_argument("--date", metavar="MM/DD/YY-MM/DD/YY",
+                    help="only include activity in this date range (inclusive); "
+                         "default is all logs")
     ap.add_argument("--template", default=os.path.join(HERE, "index.html"),
                     help="page template to fill (kept unmodified)")
     ap.add_argument("--out", default=os.path.join(HERE, "wrapped.html"),
@@ -274,7 +283,18 @@ def main():
     ap.add_argument("--json", help="also write the raw data block to this file")
     a = ap.parse_args()
 
-    data = build_data(parse(a.logs))
+    drange = None
+    if a.date:
+        try:
+            lo, hi = a.date.split("-")
+            drange = (datetime.datetime.strptime(lo.strip(), "%m/%d/%y").date(),
+                      datetime.datetime.strptime(hi.strip(), "%m/%d/%y").date())
+        except Exception:
+            sys.exit("--date must look like MM/DD/YY-MM/DD/YY, e.g. 06/08/26-07/01/26")
+        if drange[0] > drange[1]:
+            sys.exit("--date start is after end")
+
+    data = build_data(parse(a.logs, drange))
     report(data)
     if a.json:
         json.dump(data, open(a.json, "w"), indent=2, ensure_ascii=False)

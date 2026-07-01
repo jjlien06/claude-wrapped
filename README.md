@@ -24,6 +24,7 @@ That's it — no dependencies, Python standard library only. `generate.py` recon
 Flags:
 
 ```bash
+python3 generate.py --date 06/08/26-07/01/26   # only this date range (default: all logs)
 python3 generate.py --logs /path      # a different logs directory
 python3 generate.py --out mine.html   # write somewhere else
 python3 generate.py --print           # print the report only, write no file
