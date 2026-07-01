@@ -92,25 +92,9 @@
   .btn:hover{transform:translateY(-2px)}
   .foot{font-family:var(--mono);font-size:12px;line-height:1.8;opacity:.62;max-width:60ch}
 
-  /* Clawd — the mascot */
-  .clawd{position:fixed;right:20px;bottom:18px;width:84px;height:92px;z-index:45;pointer-events:none;
-    animation:clawd-in .7s .4s both;filter:drop-shadow(0 8px 16px rgba(0,0,0,.35));}
-  @media(max-width:600px){.clawd{width:62px;height:68px;right:12px;bottom:12px}}
-  @keyframes clawd-in{from{transform:translateY(130%) rotate(10deg);opacity:0}to{transform:none;opacity:1}}
-  .clawd .float{animation:c-bob 2.6s ease-in-out infinite;transform-origin:50% 90%;}
-  @keyframes c-bob{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-7px) rotate(1.5deg)}}
-  .clawd .rays{animation:c-spin 22s linear infinite;transform-origin:50px 52px;}
-  @keyframes c-spin{to{transform:rotate(360deg)}}
-  .clawd .eye{transform-origin:center;transform-box:fill-box;animation:c-blink 4.2s infinite;}
-  .clawd .eye.r{animation-delay:.06s}
-  @keyframes c-blink{0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
-  .clawd .arm{transform-origin:76px 60px;transform-box:fill-box;animation:c-wave 1.8s ease-in-out infinite;}
-  @keyframes c-wave{0%,100%{transform:rotate(6deg)}50%{transform:rotate(-24deg)}}
-
   @media(prefers-reduced-motion:reduce){
     html{scroll-behavior:auto}.rise{opacity:1;transform:none;transition:none}
     section:before{animation:none}.hint span{animation:none}
-    .clawd,.clawd *{animation:none!important}
   }
 </style>
 
@@ -177,51 +161,6 @@
 <div class="prog" id="prog"></div>
 <nav class="dots" id="dots"></nav>
 <div class="credit">Claude Wrapped</div>
-
-<!-- Clawd, the mascot -->
-<div class="clawd" aria-hidden="true">
-  <svg viewBox="0 0 100 100" width="100%" height="100%">
-    <g class="float">
-      <!-- sunburst rays -->
-      <g class="rays" fill="#ff8a5c">
-        <g>
-          <rect x="46" y="4" width="8" height="20" rx="4"/>
-          <rect x="46" y="4" width="8" height="20" rx="4" transform="rotate(45 50 52)"/>
-          <rect x="46" y="4" width="8" height="20" rx="4" transform="rotate(90 50 52)"/>
-          <rect x="46" y="4" width="8" height="20" rx="4" transform="rotate(135 50 52)"/>
-          <rect x="46" y="4" width="8" height="20" rx="4" transform="rotate(180 50 52)"/>
-          <rect x="46" y="4" width="8" height="20" rx="4" transform="rotate(225 50 52)"/>
-          <rect x="46" y="4" width="8" height="20" rx="4" transform="rotate(270 50 52)"/>
-          <rect x="46" y="4" width="8" height="20" rx="4" transform="rotate(315 50 52)"/>
-        </g>
-      </g>
-      <!-- little feet -->
-      <ellipse cx="40" cy="88" rx="7" ry="5" fill="#c73b28"/>
-      <ellipse cx="60" cy="88" rx="7" ry="5" fill="#c73b28"/>
-      <!-- body -->
-      <circle cx="50" cy="52" r="30" fill="#ff6a4d"/>
-      <circle cx="50" cy="52" r="30" fill="url(#cg)"/>
-      <!-- waving arm -->
-      <rect class="arm" x="72" y="52" width="18" height="8" rx="4" fill="#ff6a4d"/>
-      <!-- face -->
-      <g>
-        <ellipse class="eye l" cx="42" cy="50" rx="4.4" ry="5.6" fill="#2a0f0a"/>
-        <ellipse class="eye r" cx="58" cy="50" rx="4.4" ry="5.6" fill="#2a0f0a"/>
-        <circle cx="43.4" cy="48" r="1.5" fill="#fff"/>
-        <circle cx="59.4" cy="48" r="1.5" fill="#fff"/>
-        <ellipse cx="38" cy="60" rx="4" ry="2.6" fill="#ff9a7f" opacity=".8"/>
-        <ellipse cx="62" cy="60" rx="4" ry="2.6" fill="#ff9a7f" opacity=".8"/>
-        <path d="M44 60 Q50 66 56 60" stroke="#2a0f0a" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-      </g>
-      <defs>
-        <radialGradient id="cg" cx="38%" cy="32%" r="75%">
-          <stop offset="0%" stop-color="#ff8a6d"/>
-          <stop offset="100%" stop-color="#ff6a4d"/>
-        </radialGradient>
-      </defs>
-    </g>
-  </svg>
-</div>
 
 <section class="s-intro" id="s0" data-dot="Intro">
   <div class="inner">

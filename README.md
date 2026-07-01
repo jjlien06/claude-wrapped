@@ -19,7 +19,7 @@ python3 generate.py        # reads ~/.claude/projects, writes your numbers into 
 open index.html            # (or double-click it)
 ```
 
-That's it — no dependencies, Python standard library only. `generate.py` reconstructs your stats and rewrites the data block inside `index.html`, so the site shows **your** year. A cheerful mascot named Clawd 🧡 waves at you the whole way down.
+That's it — no dependencies, Python standard library only. `generate.py` reconstructs your stats and rewrites the data block inside `index.html`, so the site shows **your** year.
 
 Flags:
 
