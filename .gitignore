@@ -1,0 +1,6 @@
+# local stat dumps
+*.json
+!package.json
+__pycache__/
+*.pyc
+.DS_Store

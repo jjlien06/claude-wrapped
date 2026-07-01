@@ -1,0 +1,426 @@
+<title>Claude Wrapped</title>
+<style>
+  :root{
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+    --ink:#0b0b10;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-snap-type:y mandatory;scroll-behavior:smooth;background:var(--ink);}
+  body{font-family:var(--sans);color:#fff;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+  ::selection{background:#fff;color:#000}
+
+  .prog{position:fixed;top:0;left:0;height:3px;width:0;z-index:50;
+    background:linear-gradient(90deg,#ff6a4d,#ffcc4d,#57e0a8);transition:width .12s linear;}
+  .dots{position:fixed;right:16px;top:50%;transform:translateY(-50%);z-index:50;display:flex;flex-direction:column;gap:11px;}
+  .dots a{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.28);transition:.3s;display:block;}
+  .dots a.on{background:#fff;transform:scale(1.5);}
+  @media(max-width:640px){.dots{right:9px;gap:9px}.dots a{width:6px;height:6px}}
+  .credit{position:fixed;left:14px;bottom:12px;z-index:50;font-family:var(--mono);font-size:11px;
+    letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.55);mix-blend-mode:difference;}
+
+  section{min-height:100svh;scroll-snap-align:start;display:flex;flex-direction:column;
+    justify-content:center;padding:64px 28px;position:relative;overflow:hidden;}
+  .inner{max-width:820px;margin:0 auto;width:100%;position:relative;z-index:2;}
+
+  section:before{content:"";position:absolute;inset:-30%;z-index:0;opacity:.5;
+    background:radial-gradient(closest-side, rgba(255,255,255,.16), transparent 70%);
+    animation:float 14s ease-in-out infinite alternate;}
+  @keyframes float{from{transform:translate(-8%,-6%) scale(1)}to{transform:translate(10%,8%) scale(1.25)}}
+
+  .eyebrow{font-family:var(--mono);font-size:13px;letter-spacing:.28em;text-transform:uppercase;opacity:.82;margin-bottom:18px;}
+  h2{font-size:clamp(30px,7vw,68px);font-weight:800;line-height:1.02;letter-spacing:-.03em;text-wrap:balance;}
+  .huge{font-family:var(--mono);font-weight:700;font-size:clamp(64px,20vw,190px);line-height:.86;
+    letter-spacing:-.04em;font-variant-numeric:tabular-nums;margin:6px 0;}
+  .sub{font-size:clamp(15px,2.4vw,21px);line-height:1.5;max-width:32ch;margin-top:20px;opacity:.92;}
+  .sub b{font-weight:800;}
+  .note{font-family:var(--mono);font-size:12.5px;opacity:.7;margin-top:22px;}
+
+  .rise{opacity:0;transform:translateY(26px);transition:opacity .7s cubic-bezier(.2,.8,.2,1),transform .7s cubic-bezier(.2,.8,.2,1);}
+  .in .rise{opacity:1;transform:none;}
+  .in .rise.d1{transition-delay:.08s}.in .rise.d2{transition-delay:.18s}
+  .in .rise.d3{transition-delay:.3s}.in .rise.d4{transition-delay:.42s}.in .rise.d5{transition-delay:.54s}
+
+  .s-intro{background:linear-gradient(160deg,#ff6a4d 0%,#b0243a 55%,#2a0f14 100%)}
+  .s-spend{background:linear-gradient(160deg,#052e26 0%,#0b7a53 55%,#a3e635 130%)}
+  .s-msgs {background:linear-gradient(160deg,#0b1e6b 0%,#2563eb 55%,#22d3ee 130%)}
+  .s-tok  {background:linear-gradient(160deg,#3b0a2e 0%,#a21462 55%,#f472b6 130%)}
+  .s-time {background:linear-gradient(160deg,#12103a 0%,#4c3bbf 55%,#a78bfa 130%)}
+  .s-model{background:linear-gradient(160deg,#4a0e0e 0%,#c2410c 55%,#fbbf24 130%)}
+  .s-tools{background:linear-gradient(160deg,#06312e 0%,#0d9488 55%,#5eead4 130%)}
+  .s-cache{background:linear-gradient(160deg,#3a2408 0%,#b45309 50%,#fcd34d 130%)}
+  .s-mara {background:linear-gradient(160deg,#0a1626 0%,#334155 50%,#38bdf8 130%)}
+  .s-files{background:linear-gradient(160deg,#241033 0%,#7e22ce 55%,#e879f9 130%)}
+  .s-super{background:linear-gradient(160deg,#101018 0%,#1a1330 60%,#3b1d54 130%)}
+  .s-recap{background:#0b0b10}
+  .s-out  {background:linear-gradient(160deg,#1a1a22 0%,#0b0b10 100%)}
+
+  .rank{list-style:none;margin-top:26px;display:flex;flex-direction:column;gap:14px;}
+  .rank li{display:flex;align-items:center;gap:16px;font-size:clamp(17px,3vw,26px);font-weight:700;}
+  .rank .n{font-family:var(--mono);font-size:.7em;opacity:.6;width:1.4em;}
+  .rank .l{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .rank .m{font-family:var(--mono);font-size:.72em;opacity:.85;font-variant-numeric:tabular-nums;}
+  .rank li:first-child{font-size:clamp(22px,4.4vw,40px);}
+  .rank.crown li:first-child .l:after{content:" 👑";font-size:.7em;}
+
+  .wall{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:26px;}
+  @media(max-width:820px){.wall{grid-template-columns:1fr 1fr}}
+  @media(max-width:520px){.wall{grid-template-columns:1fr}}
+  .sup{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:16px 16px 18px;}
+  .sup .em{font-size:26px;line-height:1}
+  .sup .t{font-weight:800;font-size:15px;margin-top:8px;letter-spacing:-.01em}
+  .sup .s{font-size:12.5px;opacity:.82;margin-top:5px;line-height:1.45}
+  .sup .s b{font-family:var(--mono);color:#ffd76a;font-weight:700}
+  .sup code{font-family:var(--mono);font-size:.9em;background:rgba(255,255,255,.1);padding:1px 5px;border-radius:4px}
+
+  .recap-card{background:linear-gradient(150deg,#171420,#0e0d14);border:1px solid #2a2a38;
+    border-radius:24px;padding:30px 26px;box-shadow:0 30px 80px rgba(0,0,0,.5);}
+  .recap-card .hd{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px dashed #333;padding-bottom:14px;margin-bottom:18px;}
+  .recap-card .hd b{font-size:18px;font-weight:800}
+  .recap-card .hd span{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;opacity:.6}
+  .rg{display:grid;grid-template-columns:1fr 1fr;gap:20px 24px;}
+  .rg .k{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.6}
+  .rg .v{font-family:var(--mono);font-weight:700;font-size:clamp(22px,5vw,32px);letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:5px;}
+  .c1{color:#ff8a6d}.c2{color:#7ff0bd}.c3{color:#ffd76a}.c4{color:#a9b6ff}.c5{color:#ff8fc4}.c6{color:#5eead4}
+
+  .hint{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;opacity:.8;z-index:3;}
+  .hint span{display:block;text-align:center;font-size:20px;animation:bob 1.6s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
+
+  .btn{display:inline-block;margin-top:26px;font-family:var(--mono);font-size:13px;letter-spacing:.1em;text-transform:uppercase;
+    background:#fff;color:#111;padding:13px 22px;border-radius:40px;text-decoration:none;font-weight:700;cursor:pointer;border:0;transition:transform .2s;}
+  .btn:hover{transform:translateY(-2px)}
+  .foot{font-family:var(--mono);font-size:12px;line-height:1.8;opacity:.62;max-width:60ch}
+
+  /* Clawd — the mascot */
+  .clawd{position:fixed;right:20px;bottom:18px;width:84px;height:92px;z-index:45;pointer-events:none;
+    animation:clawd-in .7s .4s both;filter:drop-shadow(0 8px 16px rgba(0,0,0,.35));}
+  @media(max-width:600px){.clawd{width:62px;height:68px;right:12px;bottom:12px}}
+  @keyframes clawd-in{from{transform:translateY(130%) rotate(10deg);opacity:0}to{transform:none;opacity:1}}
+  .clawd .float{animation:c-bob 2.6s ease-in-out infinite;transform-origin:50% 90%;}
+  @keyframes c-bob{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-7px) rotate(1.5deg)}}
+  .clawd .rays{animation:c-spin 22s linear infinite;transform-origin:50px 52px;}
+  @keyframes c-spin{to{transform:rotate(360deg)}}
+  .clawd .eye{transform-origin:center;transform-box:fill-box;animation:c-blink 4.2s infinite;}
+  .clawd .eye.r{animation-delay:.06s}
+  @keyframes c-blink{0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+  .clawd .arm{transform-origin:76px 60px;transform-box:fill-box;animation:c-wave 1.8s ease-in-out infinite;}
+  @keyframes c-wave{0%,100%{transform:rotate(6deg)}50%{transform:rotate(-24deg)}}
+
+  @media(prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}.rise{opacity:1;transform:none;transition:none}
+    section:before{animation:none}.hint span{animation:none}
+    .clawd,.clawd *{animation:none!important}
+  }
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     DATA BLOCK — regenerated by generate.py. The demo values below are a
+     scrubbed sample; run `python3 generate.py` to fill in your own.
+     ═══════════════════════════════════════════════════════════════════ -->
+<script id="wrapped-data" type="application/json">
+{
+  "range": ["2026-06-08", "2026-07-01"],
+  "days": 24,
+  "grand": 2868.10,
+  "perDay": 119,
+  "perMsg": "13¢",
+  "models": [["Opus 4.8", 1908], ["Fable 5", 621], ["Sonnet 4.6", 41], ["Sonnet 5", 19], ["Haiku 4.5", 10]],
+  "topModel": "Opus 4.8",
+  "topModelPct": 73,
+  "messages": 59645,
+  "userMsgs": 21884,
+  "asstMsgs": 37761,
+  "outputTokensM": 13.6,
+  "novels": 113,
+  "userCharsM": 6.3,
+  "toolCalls": 18894,
+  "topTools": [["Bash", 8584], ["Read", 5020], ["Edit", 2480]],
+  "cacheHitPct": 97.1,
+  "cacheSaved": 14567,
+  "peakHourLabel": "5PM",
+  "activeDays": 22,
+  "streak": 10,
+  "web": 592,
+  "thinking": 7330,
+  "agents": 341,
+  "errors": 486,
+  "maxOutput": 32245,
+  "longestSessionHrs": 66,
+  "longestSessionMsgs": 1811,
+  "longestSessionOutK": 800,
+  "longestSessionCost": 318,
+  "priciestSession": 380,
+  "topFile": "the core analysis script",
+  "topFileReads": 254,
+  "topFileEdits": 250,
+  "superlatives": [
+    {"em": "🏦", "t": "The cache paid rent", "s": "Prompt caching saved <b>$14,567</b> at 10% of full input price."},
+    {"em": "🕰️", "t": "Never-ending session", "s": "One session stayed open <b>66 hours</b> — 1,811 messages."},
+    {"em": "💸", "t": "Big spender", "s": "<b>$380</b> in a single session (965 messages)."},
+    {"em": "📋", "t": "The mega-paste", "s": "Longest single message: <b>561,795</b> characters."},
+    {"em": "⚡", "t": "Bash workhorse", "s": "<b>8,584</b> commands — <b>2,863</b> were just <code>cd</code>."},
+    {"em": "🔎", "t": "grep-happy", "s": "Searched with grep <b>1,318</b> times."},
+    {"em": "📖", "t": "Comfort file", "s": "One script: read <b>254×</b>, edited <b>250×</b>."},
+    {"em": "🤖", "t": "Opus carried it", "s": "<b>73%</b> of all spend ran on Opus 4.8."},
+    {"em": "🧠", "t": "Deep thinker", "s": "<b>7,330</b> extended-reasoning passes."},
+    {"em": "🌙", "t": "Night owl", "s": "<b>5,079</b> events logged after midnight."},
+    {"em": "🧩", "t": "Delegator", "s": "<b>341</b> sub-agents & workflows dispatched."},
+    {"em": "🐘", "t": "Biggest reply", "s": "<b>32,245</b> output tokens in one message."},
+    {"em": "❓", "t": "Claude asked back", "s": "<b>77</b> clarifying questions to you."},
+    {"em": "🎨", "t": "Meta moment", "s": "<b>15</b> artifacts built — including this one."},
+    {"em": "📅", "t": "Consistency", "s": "<b>10-day</b> streak; 22 of 24 days active."}
+  ]
+}
+</script>
+
+<div class="prog" id="prog"></div>
+<nav class="dots" id="dots"></nav>
+<div class="credit">Claude Wrapped</div>
+
+<!-- Clawd, the mascot -->
+<div class="clawd" aria-hidden="true">
+  <svg viewBox="0 0 100 100" width="100%" height="100%">
+    <g class="float">
+      <!-- sunburst rays -->
+      <g class="rays" fill="#ff8a5c">
+        <g>
+          <rect x="46" y="4" width="8" height="20" rx="4"/>
+          <rect x="46" y="4" width="8" height="20" rx="4" transform="rotate(45 50 52)"/>
+          <rect x="46" y="4" width="8" height="20" rx="4" transform="rotate(90 50 52)"/>
+          <rect x="46" y="4" width="8" height="20" rx="4" transform="rotate(135 50 52)"/>
+          <rect x="46" y="4" width="8" height="20" rx="4" transform="rotate(180 50 52)"/>
+          <rect x="46" y="4" width="8" height="20" rx="4" transform="rotate(225 50 52)"/>
+          <rect x="46" y="4" width="8" height="20" rx="4" transform="rotate(270 50 52)"/>
+          <rect x="46" y="4" width="8" height="20" rx="4" transform="rotate(315 50 52)"/>
+        </g>
+      </g>
+      <!-- little feet -->
+      <ellipse cx="40" cy="88" rx="7" ry="5" fill="#c73b28"/>
+      <ellipse cx="60" cy="88" rx="7" ry="5" fill="#c73b28"/>
+      <!-- body -->
+      <circle cx="50" cy="52" r="30" fill="#ff6a4d"/>
+      <circle cx="50" cy="52" r="30" fill="url(#cg)"/>
+      <!-- waving arm -->
+      <rect class="arm" x="72" y="52" width="18" height="8" rx="4" fill="#ff6a4d"/>
+      <!-- face -->
+      <g>
+        <ellipse class="eye l" cx="42" cy="50" rx="4.4" ry="5.6" fill="#2a0f0a"/>
+        <ellipse class="eye r" cx="58" cy="50" rx="4.4" ry="5.6" fill="#2a0f0a"/>
+        <circle cx="43.4" cy="48" r="1.5" fill="#fff"/>
+        <circle cx="59.4" cy="48" r="1.5" fill="#fff"/>
+        <ellipse cx="38" cy="60" rx="4" ry="2.6" fill="#ff9a7f" opacity=".8"/>
+        <ellipse cx="62" cy="60" rx="4" ry="2.6" fill="#ff9a7f" opacity=".8"/>
+        <path d="M44 60 Q50 66 56 60" stroke="#2a0f0a" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      </g>
+      <defs>
+        <radialGradient id="cg" cx="38%" cy="32%" r="75%">
+          <stop offset="0%" stop-color="#ff8a6d"/>
+          <stop offset="100%" stop-color="#ff6a4d"/>
+        </radialGradient>
+      </defs>
+    </g>
+  </svg>
+</div>
+
+<section class="s-intro" id="s0" data-dot="Intro">
+  <div class="inner">
+    <div class="eyebrow rise" id="intro-eyebrow">◇ your year with Claude Code</div>
+    <h2 class="rise d1">Your coding<br>year, wrapped.</h2>
+    <p class="sub rise d2" id="intro-sub">Every token, session, and shell command — rebuilt from the logs.</p>
+  </div>
+  <div class="hint rise d3">scroll<span>↓</span></div>
+</section>
+
+<section class="s-spend" id="s1" data-dot="Spend">
+  <div class="inner">
+    <div class="eyebrow rise">Total spend</div>
+    <div class="huge rise d1" id="v-spend" data-pre="$" data-dec="2">$0</div>
+    <p class="sub rise d2">Across your models and sessions. That's about <b id="d-perday">$0</b> a day — or <b id="d-permsg">0</b> every time you hit enter.</p>
+  </div>
+</section>
+
+<section class="s-msgs" id="s2" data-dot="Messages">
+  <div class="inner">
+    <div class="eyebrow rise">You said</div>
+    <div class="huge rise d1" id="v-usermsgs">0</div>
+    <h2 class="rise d2" style="font-size:clamp(22px,5vw,44px)">messages.</h2>
+    <p class="sub rise d3">And Claude replied <b id="d-asst">0</b> times — <b id="d-total">0</b> messages in the conversation total.</p>
+  </div>
+</section>
+
+<section class="s-tok" id="s3" data-dot="Tokens">
+  <div class="inner">
+    <div class="eyebrow rise">Claude wrote back</div>
+    <div class="huge rise d1" id="v-outtok" data-dec="1" data-suf="M">0</div>
+    <h2 class="rise d2" style="font-size:clamp(22px,5vw,44px)">output tokens.</h2>
+    <p class="sub rise d3">Roughly <b id="d-novels">0</b> novels of text. You typed <b id="d-chars">0</b> characters back.</p>
+  </div>
+</section>
+
+<section class="s-time" id="s4" data-dot="Clock">
+  <div class="inner">
+    <div class="eyebrow rise">Your prime time</div>
+    <div class="huge rise d1" id="d-peakhour">—</div>
+    <p class="sub rise d2">Your busiest hour by far. Active <b id="d-active">0</b> of <b id="d-days">0</b> days, a <b id="d-streak">0-day</b> streak at your peak. 🦉</p>
+  </div>
+</section>
+
+<section class="s-model" id="s5" data-dot="Models">
+  <div class="inner">
+    <div class="eyebrow rise">Your top model</div>
+    <h2 class="rise d1" id="d-topmodel-h">—</h2>
+    <ol class="rank crown rise d2" id="model-rank"></ol>
+    <p class="note rise d3" id="d-modelpct"></p>
+  </div>
+</section>
+
+<section class="s-tools" id="s6" data-dot="Tools">
+  <div class="inner">
+    <div class="eyebrow rise">Claude reached for the keyboard</div>
+    <div class="huge rise d1" id="v-tools">0</div>
+    <h2 class="rise d2" style="font-size:clamp(22px,5vw,44px)">times.</h2>
+    <ol class="rank rise d3" id="tool-rank"></ol>
+  </div>
+</section>
+
+<section class="s-cache" id="s7" data-dot="Cache">
+  <div class="inner">
+    <div class="eyebrow rise">The quiet flex</div>
+    <div class="huge rise d1" id="v-cachesaved" data-pre="$">$0</div>
+    <p class="sub rise d2">saved by prompt caching. <b id="d-cachehit">0%</b> of your input tokens were cache hits — billed at a tenth of the price instead of re-sent in full.</p>
+  </div>
+</section>
+
+<section class="s-mara" id="s8" data-dot="Marathon">
+  <div class="inner">
+    <div class="eyebrow rise">Your longest session</div>
+    <div class="huge rise d1" id="v-longhrs" data-suf="h">0h</div>
+    <p class="sub rise d2">Your busiest project's marathon session — <b id="d-longmsgs">0</b> messages, <b id="d-longout">0k</b> output tokens, <b id="d-longcost">$0</b>. Your priciest single session hit <b id="d-pricy">$0</b>.</p>
+  </div>
+</section>
+
+<section class="s-files" id="s9" data-dot="Files">
+  <div class="inner">
+    <div class="eyebrow rise">The file you couldn't quit</div>
+    <h2 class="rise d1" id="d-topfile">—</h2>
+    <p class="sub rise d2">Read <b id="d-reads">0</b> times, edited <b id="d-edits">0</b>.</p>
+    <p class="note rise d3" id="d-extra"></p>
+  </div>
+</section>
+
+<section class="s-super" id="s10" data-dot="Awards">
+  <div class="inner" style="max-width:900px">
+    <div class="eyebrow rise">The superlatives</div>
+    <h2 class="rise d1" style="font-size:clamp(26px,5.5vw,52px)">Awards ceremony.</h2>
+    <div class="wall" id="wall"></div>
+  </div>
+</section>
+
+<section class="s-recap" id="s11" data-dot="Recap">
+  <div class="inner">
+    <div class="eyebrow rise" style="text-align:center">Your year, on one card</div>
+    <div class="recap-card rise d1" style="margin-top:18px">
+      <div class="hd"><b>Claude Wrapped</b><span id="r-range"></span></div>
+      <div class="rg">
+        <div><div class="k">Total spend</div><div class="v c1" id="r-spend"></div></div>
+        <div><div class="k">Messages</div><div class="v c4" id="r-msgs"></div></div>
+        <div><div class="k">Output tokens</div><div class="v c5" id="r-tok"></div></div>
+        <div><div class="k">Tool calls</div><div class="v c6" id="r-tools"></div></div>
+        <div><div class="k">Cache saved</div><div class="v c3" id="r-cache"></div></div>
+        <div><div class="k">Top model</div><div class="v c1" id="r-model" style="font-size:clamp(18px,4vw,24px)"></div></div>
+        <div><div class="k">Longest session</div><div class="v c2" id="r-long"></div></div>
+        <div><div class="k">Active days</div><div class="v c4" id="r-active"></div></div>
+      </div>
+    </div>
+    <div style="text-align:center"><button class="btn rise d2" id="replay">↻ Replay</button></div>
+  </div>
+</section>
+
+<section class="s-out" id="s12" data-dot="About">
+  <div class="inner">
+    <div class="eyebrow rise">How this was made</div>
+    <h2 class="rise d1" style="font-size:clamp(24px,5vw,44px)">Built from your logs.</h2>
+    <p class="foot rise d2" style="margin-top:20px">
+      Parsed the <span style="opacity:.9">.jsonl</span> session logs Claude Code writes under
+      <span style="opacity:.9">~/.claude/projects</span>. Cost = tokens × current per-model rates
+      (input, output, cache-read 0.1×, cache-write 1.25×/2×), deduped by message + request id.
+      An estimate — Claude Code stores no dollar figures.
+    </p>
+    <p class="foot rise d3" style="margin-top:16px;opacity:.5">
+      Wrap your own year → <span style="opacity:.9">python3 generate.py</span>, then open this file.
+      github.com/jjlien06/claude-wrapped
+    </p>
+  </div>
+</section>
+
+<script>
+const D=JSON.parse(document.getElementById('wrapped-data').textContent);
+const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const $=id=>document.getElementById(id);
+const num=(n,d=0)=>n.toLocaleString('en',{minimumFractionDigits:d,maximumFractionDigits:d});
+
+// ---- populate everything from D ----
+$('v-spend').dataset.count=D.grand;
+$('d-perday').textContent='$'+D.perDay; $('d-permsg').textContent=D.perMsg;
+$('v-usermsgs').dataset.count=D.userMsgs;
+$('d-asst').textContent=num(D.asstMsgs); $('d-total').textContent=num(D.messages);
+$('v-outtok').dataset.count=D.outputTokensM;
+$('d-novels').textContent=D.novels; $('d-chars').textContent=D.userCharsM+'M';
+$('d-peakhour').textContent=D.peakHourLabel;
+$('d-active').textContent=D.activeDays; $('d-days').textContent=D.days; $('d-streak').textContent=D.streak+'-day';
+$('d-topmodel-h').innerHTML=D.topModel+' did<br>the heavy lifting.';
+$('model-rank').innerHTML=D.models.map((m,i)=>`<li><span class="n">${i+1}</span><span class="l">${m[0]}</span><span class="m">$${num(m[1])}</span></li>`).join('');
+$('d-modelpct').textContent=`${D.topModelPct}% of everything you spent ran through ${D.topModel}.`;
+$('v-tools').dataset.count=D.toolCalls;
+$('tool-rank').innerHTML=D.topTools.map((t,i)=>`<li><span class="n">${i+1}</span><span class="l">${t[0]}</span><span class="m">${num(t[1])}</span></li>`).join('');
+$('v-cachesaved').dataset.count=D.cacheSaved;
+$('d-cachehit').textContent=D.cacheHitPct+'%';
+$('v-longhrs').dataset.count=D.longestSessionHrs;
+$('d-longmsgs').textContent=num(D.longestSessionMsgs);
+$('d-longout').textContent=D.longestSessionOutK+'k'; $('d-longcost').textContent='$'+num(D.longestSessionCost);
+$('d-pricy').textContent='$'+num(D.priciestSession);
+$('d-topfile').textContent=D.topFile;
+$('d-reads').textContent=num(D.topFileReads); $('d-edits').textContent=num(D.topFileEdits);
+$('d-extra').textContent=`${num(D.web)} web lookups · ${num(D.thinking)} thinking passes · ${num(D.agents)} sub-agents.`;
+$('wall').innerHTML=D.superlatives.map(s=>`<div class="sup"><div class="em">${s.em}</div><div class="t">${s.t}</div><div class="s">${s.s}</div></div>`).join('');
+// recap
+$('r-range').textContent=D.range[0].slice(5)+' – '+D.range[1].slice(5);
+$('r-spend').textContent='$'+num(D.grand,2);
+$('r-msgs').textContent=num(D.messages); $('r-tok').textContent=D.outputTokensM+'M';
+$('r-tools').textContent=num(D.toolCalls); $('r-cache').textContent='$'+num(D.cacheSaved);
+$('r-model').textContent=D.topModel; $('r-long').textContent=D.longestSessionHrs+' h';
+$('r-active').textContent=D.activeDays+' / '+D.days;
+
+// ---- scenes: dots, reveal, count-up, nav ----
+const secs=[...document.querySelectorAll('section')];
+const dots=$('dots');
+secs.forEach(s=>{const a=document.createElement('a');a.href='#'+s.id;a.title=s.dataset.dot;dots.appendChild(a);});
+const dotEls=[...dots.children];
+
+function count(el){
+  if(el.dataset.done)return;el.dataset.done=1;
+  const tgt=parseFloat(el.dataset.count||'0'),dec=+(el.dataset.dec||0),pre=el.dataset.pre||'',suf=el.dataset.suf||'';
+  if(reduce){el.textContent=pre+num(tgt,dec)+suf;return;}
+  const dur=1400,t0=performance.now();
+  (function step(t){let p=Math.min((t-t0)/dur,1);p=1-Math.pow(1-p,3);
+    el.textContent=pre+num(tgt*p,dec)+suf;if(p<1)requestAnimationFrame(step);})(t0);
+}
+const io=new IntersectionObserver(es=>es.forEach(e=>{
+  const i=secs.indexOf(e.target);
+  if(e.isIntersecting){e.target.classList.add('in');
+    e.target.querySelectorAll('[data-count]').forEach(count);
+    dotEls.forEach((d,j)=>d.classList.toggle('on',j===i));}
+}),{threshold:.55});
+secs.forEach(s=>io.observe(s));
+
+const prog=$('prog');
+addEventListener('scroll',()=>{const h=document.documentElement;
+  prog.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';},{passive:true});
+$('replay').addEventListener('click',()=>scrollTo({top:0,behavior:reduce?'auto':'smooth'}));
+addEventListener('keydown',e=>{
+  const cur=secs.findIndex(s=>{const r=s.getBoundingClientRect();return r.top>=-5&&r.top<innerHeight*.5;});
+  if(e.key==='ArrowDown'||e.key==='PageDown'){e.preventDefault();secs[Math.min(cur+1,secs.length-1)]?.scrollIntoView();}
+  if(e.key==='ArrowUp'||e.key==='PageUp'){e.preventDefault();secs[Math.max(cur-1,0)]?.scrollIntoView();}
+});
+</script>
