@@ -15,18 +15,19 @@ Open `index.html` in a browser, or host it free on **GitHub Pages** (Settings �
 ```bash
 git clone https://github.com/jjlien06/claude-wrapped
 cd claude-wrapped
-python3 generate.py        # reads ~/.claude/projects, writes your numbers into index.html
-open index.html            # (or double-click it)
+python3 generate.py        # reads ~/.claude/projects
+open wrapped.html          # your Wrapped (or double-click it)
 ```
 
-That's it — no dependencies, Python standard library only. `generate.py` reconstructs your stats and rewrites the data block inside `index.html`, so the site shows **your** year.
+That's it — no dependencies, Python standard library only. `generate.py` reconstructs your stats and writes **`wrapped.html`** — a filled-in copy with your numbers. `index.html` stays a scrubbed template, and `wrapped.html` is gitignored, so you can't accidentally commit your own filenames/spend.
 
 Flags:
 
 ```bash
-python3 generate.py --logs /path    # a different logs directory
-python3 generate.py --print         # print the report only, don't touch index.html
-python3 generate.py --json out.json # also dump the raw data block
+python3 generate.py --logs /path      # a different logs directory
+python3 generate.py --out mine.html   # write somewhere else
+python3 generate.py --print           # print the report only, write no file
+python3 generate.py --json out.json   # also dump the raw data block
 ```
 
 Example report:

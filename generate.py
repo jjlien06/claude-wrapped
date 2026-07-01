@@ -15,7 +15,7 @@ index.html in a browser.
 Cost is reconstructed from token counts at current published per-model rates —
 Claude Code stores no dollar figures, so treat it as a close estimate.
 """
-import argparse, json, glob, os, re, collections, datetime, sys
+import argparse, json, glob, os, re, html, collections, datetime, sys
 
 # Published per-model rates, $/million tokens: (input, output).
 # Cache reads bill at 0.1x input; cache writes at 1.25x (5-min) / 2x (1-hour).
@@ -218,7 +218,7 @@ def _superlatives(r, saved, longest, priciest, models, grand, topfile, reads_n, 
         ("📋", "The mega-paste", f"Longest single message: <b>{r['maxusr']:,}</b> characters.", r["maxusr"] > 5000),
         ("⚡", "Bash workhorse", f"<b>{bash_total:,}</b> commands — <b>{cd:,}</b> were just <code>cd</code>.", bash_total > 0),
         ("🔎", "grep-happy", f"Searched with grep <b>{grep:,}</b> times.", grep > 0),
-        ("📖", "Comfort file", f"<code>{topfile}</code>: read <b>{reads_n}×</b>, edited <b>{edits_n}×</b>.", reads_n > 0),
+        ("📖", "Comfort file", f"<code>{html.escape(topfile)}</code>: read <b>{reads_n}×</b>, edited <b>{edits_n}×</b>.", reads_n > 0),
         ("🤖", f"{models[0][0]} carried it" if models else "Top model", f"<b>{round(100*models[0][1]/grand)}%</b> of all spend ran on {models[0][0]}." if models and grand else "", bool(models)),
         ("🧠", "Deep thinker", f"<b>{r['think']:,}</b> extended-reasoning passes.", r["think"] > 0),
         ("🌙", "Night owl", f"<b>{night:,}</b> events logged after midnight.", night > 0),
@@ -231,15 +231,20 @@ def _superlatives(r, saved, longest, priciest, models, grand, topfile, reads_n, 
     return [{"em": e, "t": ti, "s": s} for e, ti, s, keep in cand if keep]
 
 
-def inject(data, path):
-    html = open(path, encoding="utf-8").read()
+def inject(data, template, out):
+    page = open(template, encoding="utf-8").read()
     block = json.dumps(data, indent=2, ensure_ascii=False)
+    # Escape so nothing in the data (e.g. an odd filename) can break out of the
+    # <script> tag. JSON.parse decodes these \uXXXX back to the real chars.
+    for ch, esc in (("&", "\\u0026"), ("<", "\\u003c"), (">", "\\u003e"),
+                    (" ", "\\u2028"), (" ", "\\u2029")):
+        block = block.replace(ch, esc)
     new, n = re.subn(
         r'(<script id="wrapped-data" type="application/json">).*?(</script>)',
-        lambda m: m.group(1) + "\n" + block + "\n" + m.group(2), html, count=1, flags=re.S)
+        lambda m: m.group(1) + "\n" + block + "\n" + m.group(2), page, count=1, flags=re.S)
     if not n:
-        sys.exit("Could not find the <script id=\"wrapped-data\"> block in index.html")
-    open(path, "w", encoding="utf-8").write(new)
+        sys.exit(f"Could not find the <script id=\"wrapped-data\"> block in {template}")
+    open(out, "w", encoding="utf-8").write(new)
 
 
 def report(d):
@@ -260,9 +265,12 @@ def report(d):
 def main():
     ap = argparse.ArgumentParser(description="Claude Code usage → Wrapped")
     ap.add_argument("--logs", default=os.path.expanduser("~/.claude/projects"))
-    ap.add_argument("--html", default=os.path.join(HERE, "index.html"))
+    ap.add_argument("--template", default=os.path.join(HERE, "index.html"),
+                    help="page template to fill (kept unmodified)")
+    ap.add_argument("--out", default=os.path.join(HERE, "wrapped.html"),
+                    help="where to write your filled-in Wrapped (gitignored by default)")
     ap.add_argument("--print", action="store_true", dest="only_print",
-                    help="print the report only; don't modify index.html")
+                    help="print the report only; write no file")
     ap.add_argument("--json", help="also write the raw data block to this file")
     a = ap.parse_args()
 
@@ -272,8 +280,9 @@ def main():
         json.dump(data, open(a.json, "w"), indent=2, ensure_ascii=False)
         print(f"  wrote {a.json}")
     if not a.only_print:
-        inject(data, a.html)
-        print(f"\n  ✓ Updated {a.html} — open it in a browser to see your Wrapped.")
+        inject(data, a.template, a.out)
+        print(f"\n  ✓ Wrote {a.out} — open it in a browser to see your Wrapped.")
+        print("    (index.html stays a scrubbed template so you don't accidentally commit your own data.)")
 
 
 if __name__ == "__main__":

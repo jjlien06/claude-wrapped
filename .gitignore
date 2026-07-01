@@ -1,3 +1,5 @@
+# your generated Wrapped (contains your real data — never commit it)
+wrapped.html
 # local stat dumps
 *.json
 !package.json
